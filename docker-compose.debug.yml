@@ -1,0 +1,12 @@
+version: '2'
+
+services:
+  test:
+    image: powerbi-php-sample:debug
+    build:
+      context: ./src/website
+      dockerfile: Dockerfile.debug
+    ports:
+      - "8080:80"
+    env_file: 
+      - secrets.env

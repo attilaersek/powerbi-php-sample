@@ -1,0 +1,10 @@
+version: '2'
+
+services:
+  test:
+    image: powerbi-php-sample
+    build:
+      context: ./src/website
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"

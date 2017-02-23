@@ -1,0 +1,40 @@
+{
+  "name": "powerbi-client",
+  "description": "",
+  "main": "./dist/powerbi.js",
+  "authors": [
+    "Microsoft"
+  ],
+  "license": "MIT",
+  "moduleType": [],
+  "homepage": "https://dev.powerbi.com",
+  "private": false,
+  "ignore": [
+    "**/.*",
+    "*/.js",
+    "*/.md",
+    "*/.nuspec",
+    "demo",
+    "node_modules",
+    "bower_components",
+    "src",
+    "test",
+    "tests",
+    "tsconfig.json",
+    "typings.json",
+    "webpack.test.tsconfig.json"
+  ],
+  "devDependencies": {
+    "jquery": "~2.2.0"
+  },
+  "version": "2.2.7",
+  "_release": "2.2.7",
+  "_resolution": {
+    "type": "version",
+    "tag": "v2.2.7",
+    "commit": "a3d5cd21889a4851e0e884e5eae5b815e3f16e0a"
+  },
+  "_source": "https://github.com/Microsoft/PowerBI-JavaScript.git",
+  "_target": "^2.2.7",
+  "_originalSource": "powerbi-client"
+}

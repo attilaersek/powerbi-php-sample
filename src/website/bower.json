@@ -1,0 +1,26 @@
+{
+  "name": "powerbi-php-sample",
+  "authors": [
+    "Attila Ersek <ersek.attila@hotmail.com>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "wwwroot/lib",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "fetch": "^1.0.0",
+    "es6-promise": "^3.2.2",
+    "bootstrap": "^3.3.6",
+    "jquery": "^3.1.0",
+    "powerbi-client": "^2.2.7"
+  }
+}

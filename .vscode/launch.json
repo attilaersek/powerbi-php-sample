@@ -1,0 +1,24 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Launch Chrome",
+            "url": "http://localhost:8080",
+            "webRoot": "${workspaceRoot}/src/website/wwwroot",
+            "preLaunchTask": "composeForDebug"
+        },
+        {
+            "type": "php",
+            "request": "launch",
+            "name": "Launch PHP",
+            "localSourceRoot": "${workspaceRoot}/src/website/wwwroot",
+            "serverSourceRoot": "/var/www/html/",
+            "xdebugSettings": {
+                
+            },
+            "preLaunchTask": "composeForDebug"            
+        }
+    ]
+}
