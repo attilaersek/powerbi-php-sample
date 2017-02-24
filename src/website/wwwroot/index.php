@@ -1,48 +1,15 @@
 <?
+    include './powerbi.php';
+
     // 1. secrets
     $accessKey = getenv('PBI_ACCESSKEY');
     $reportId = getenv('PBI_REPORTID');
     $workspaceId = getenv('PBI_WSID');
     $workspaceCollectionName = getenv('PBI_WSCNAME');
     
-    // 2. construct input value
-    $token1 = "{" .
-      "\"typ\":\"JWT\"," .
-      "\"alg\":\"HS256\"" .
-      "}";
-    $token2 = "{" .
-      "\"wid\":\"" . $workspaceId . "\"," . // workspace id
-      "\"rid\":\"" .$reportId . "\"," . // report id
-      "\"wcn\":\"" . $workspaceCollectionName . "\"," . // workspace collection name
-      "\"iss\":\"PowerBISDK\"," .
-      "\"ver\":\"0.2.0\"," .
-      "\"aud\":\"https://analysis.windows.net/powerbi/api\"," .
-      "\"nbf\":" . date("U") . "," .
-      "\"exp\":" . date("U" , strtotime("+1 hour")) .
-      "}";
-    $inputval = rfc4648_base64_encode($token1) .
-      "." .
-      rfc4648_base64_encode($token2);
-
-    // 3. get encoded signature value
-    $hash = hash_hmac("sha256",
-        $inputval,
-        $accessKey,
-        true);
-    $sig = rfc4648_base64_encode($hash);
-
-    // 4. get apptoken
-    $appToken = $inputval . "." . $sig;
-
-    // helper functions
-    function rfc4648_base64_encode($arg) {
-      $res = $arg;
-      $res = base64_encode($res);
-      $res = str_replace("/", "_", $res);
-      $res = str_replace("+", "-", $res);
-      $res = rtrim($res, "=");
-      return $res;
-    }
+    $powerbi = new PowerBi($accessKey, $workspaceCollectionName, $workspaceId);
+    $reports = $powerbi->getReports();
+    $report = $reports[0];
 ?>
 <!DOCTYPE html>
 <html>
@@ -54,18 +21,18 @@
 </head>
 <body>
     <button id="print">Print</button>
-    <div id="reportContainer" style="width: 100%; height: 400px"></div>
+    <div id="reportContainer" style="width: 100%; height: 600px"></div>
     <script src="/lib/jquery/dist/jquery.js"></script>
     <script src="/lib/powerbi-client/dist/powerbi.js"></script>    
     <script>
         var config= {
             type: 'report',
-            accessToken: '<?=$appToken?>',
-            embedUrl: 'https://embedded.powerbi.com/appTokenReportEmbed?reportId=<?=$reportId?>',
-            id: '<?=$reportId?>',
+            accessToken: '<?=$report->getEmbedToken()?>',
+            embedUrl: '<?=$report->embedUrl?>',
+            id: '<?=$report->id?>',
             settings: {
                 filterPaneEnabled: true,
-                navContentPaneEnabled: true
+                navContentPaneEnabled: false
             }
         };
         $(function(){
