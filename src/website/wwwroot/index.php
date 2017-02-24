@@ -22,8 +22,44 @@
 <body>
     <button id="print">Print</button>
     <div id="reportContainer" style="width: 100%; height: 600px"></div>
+    <div id="pages"></div>
+    <div id="filters">
+        City: <input type="text" id="cityFilter" placeholder="City name..." /><button onclick="filterCity()">Apply</button>
+    </div>
     <script src="/lib/jquery/dist/jquery.js"></script>
-    <script src="/lib/powerbi-client/dist/powerbi.js"></script>    
+    <script src="/lib/powerbi-client/dist/powerbi.js"></script>
+    <script>
+        function filterCity() {
+            var report = powerbi.embeds[0];
+            var cityFilter = $('#cityFilter').val();
+            if(!cityFilter || 0 === cityFilter.length) {
+                report.removeFilters();
+            }
+            else {
+                const filter = {
+                    $schema: "http://powerbi.com/product/schema#advanced",
+                    target: {
+                        table: "Store",
+                        column: "City"
+                    },
+                   logicalOperator: "And", 
+                   conditions: [ { "operator": "Contains", "value": cityFilter } ]
+                };
+                report.setFilters([filter]);
+            }
+        }
+        function navigate(pageName) {
+            var report = powerbi.embeds[0];
+            report.getPages().then(function(pages){
+                pages.some(page => {
+                    if (page.name === pageName) {
+                        page.setActive();
+                        return true;
+                    }
+                });
+            });
+        } 
+    </script>    
     <script>
         var config= {
             type: 'report',
@@ -31,13 +67,21 @@
             embedUrl: '<?=$report->embedUrl?>',
             id: '<?=$report->id?>',
             settings: {
-                filterPaneEnabled: true,
+                filterPaneEnabled: false,
                 navContentPaneEnabled: false
             }
         };
         $(function(){
             var reportContainer = $('#reportContainer')[0];
             var report = powerbi.embed(reportContainer, config);
+            report.off("loaded");
+            report.on("loaded", function() {
+                report.getPages().then(function(pages){
+                    pages.forEach(function(page) {
+                        $('#pages').append('<button onclick="navigate(\''+page.name+'\')">'+page.displayName+'</button>');
+                    });
+                });
+            });
             $('#print').click(function(){
                 var report = powerbi.embeds[0];
                 report.print()
