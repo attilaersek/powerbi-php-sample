@@ -5,20 +5,15 @@ cleanAll () {
   fi
 
   composeFileName="docker-compose.yml"
-  if [[ $ENVIRONMENT != "release" ]]; then
-    composeFileName="docker-compose.$ENVIRONMENT.yml"
-  fi
+  overrideFileName="docker-compose.$ENVIRONMENT.yml"  
 
   if [[ ! -f $composeFileName ]]; then
-    echo "$ENVIRONMENT is not a valid parameter. File '$composeFileName' does not exist."
+    echo "File '$composeFileName' does not exist."
+  if [[ ! -f $overrideFileName ]]; then
+    echo "$ENVIRONMENT is not a valid parameter. File '$ovverrideFileName' does not exist."
   else
-    docker-compose -f $composeFileName down --rmi all
-
-    # Remove any dangling images (from previous builds)
-    danglingImages=$(docker images -q --filter 'dangling=true')
-    if [[ ! -z $danglingImages ]]; then
-      docker rmi -f $danglingImages
-    fi
+    docker-compose -f "$composeFileName" -f "$overrideFileName" down --rmi all
+    docker rmi $(docker images --filter "dangling=true" -q)
   fi
 }
 
@@ -29,15 +24,15 @@ buildImage () {
   fi
 
   composeFileName="docker-compose.yml"
-  if [[ $ENVIRONMENT != "release" ]]; then
-    composeFileName="docker-compose.$ENVIRONMENT.yml"
-  fi
+  overrideFileName="docker-compose.$ENVIRONMENT.yml"
 
   if [[ ! -f $composeFileName ]]; then
-    echo "$ENVIRONMENT is not a valid parameter. File '$composeFileName' does not exist."
+    echo "File '$composeFileName' does not exist."
+  if [[ ! -f $overrideFileName ]]; then
+    echo "$ENVIRONMENT is not a valid parameter. File '$ovverrideFileName' does not exist."
   else
-    echo "Building the project ($ENVIRONMENT)."
-    docker-compose -f "$composeFileName" build
+    docker-compose -f "$composeFileName" -f "$overrideFileName" build
+    docker rmi $(docker images --filter "dangling=true" -q)
   fi
 }
 
@@ -48,28 +43,16 @@ compose () {
   fi
 
   composeFileName="docker-compose.yml"
-  if [[ $ENVIRONMENT != "release" ]]; then
-      composeFileName="docker-compose.$ENVIRONMENT.yml"
-  fi
+  overrideFileName="docker-compose.$ENVIRONMENT.yml"
 
   if [[ ! -f $composeFileName ]]; then
-    echo "$ENVIRONMENT is not a valid parameter. File '$composeFileName' does not exist."
+    echo "File '$composeFileName' does not exist."
+  if [[ ! -f $overrideFileName ]]; then
+    echo "$ENVIRONMENT is not a valid parameter. File '$ovverrideFileName' does not exist."
   else
-    echo "Running compose file $composeFileName"
-    docker-compose -f $composeFileName kill
-    docker-compose -f $composeFileName up -d
+    docker-compose -f "$composeFileName" -f "$overrideFileName" kill
+    docker-compose -f "$composeFileName" -f "$overrideFileName" up -d --remove-orphans
   fi
-}
-
-openSite () {
-  printf 'Opening site'
-  until $(curl --output /dev/null --silent --head --fail $url); do
-    printf '.'
-    sleep 1
-  done
-
-  # Open the site.
-  open $url
 }
 
 # Shows the usage for the script.
@@ -81,7 +64,6 @@ showUsage () {
   echo "    build: Builds a Docker image."
   echo "    compose: Runs docker-compose."
   echo "    clean: Removes the image and kills all containers based on that image."
-  echo "    composeForDebug: Builds the image and runs docker-compose."
   echo ""
   echo "Environments:"
   echo "    debug: Uses debug environment."
@@ -100,12 +82,6 @@ else
   case "$1" in
     "compose")
             ENVIRONMENT=$(echo $2 | tr "[:upper:]" "[:lower:]")
-            compose
-            openSite
-            ;;
-    "composeForDebug")
-            ENVIRONMENT=$(echo $2 | tr "[:upper:]" "[:lower:]")
-            export REMOTE_DEBUGGING=1
             buildImage
             compose
             ;;

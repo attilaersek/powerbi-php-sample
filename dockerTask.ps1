@@ -2,15 +2,11 @@
 .SYNOPSIS
 Builds and runs a Docker image.
 .PARAMETER Compose
-Runs docker-compose.
+Builds images and runs docker-compose up. Kills old.
 .PARAMETER Build
-Builds a Docker image.
+Builds images.
 .PARAMETER Clean
-Removes the image test and kills all containers based on that image.
-.PARAMETER ComposeForDebug
-Builds the image and runs docker-compose.
-.PARAMETER StartDebugging
-Finds the running container and starts the debugger inside of it.
+Runs docker-compose down, and removes images.
 .PARAMETER Environment
 The enviorment to build for (Debug or Release), defaults to Debug
 .EXAMPLE
@@ -21,14 +17,11 @@ Build a Docker image named test
 Param(
     [Parameter(Mandatory=$True,ParameterSetName="Compose")]
     [switch]$Compose,
-    [Parameter(Mandatory=$True,ParameterSetName="ComposeForDebug")]
-    [switch]$ComposeForDebug,
     [Parameter(Mandatory=$True,ParameterSetName="Build")]
     [switch]$Build,
     [Parameter(Mandatory=$True,ParameterSetName="Clean")]
     [switch]$Clean,
     [parameter(ParameterSetName="Compose")]
-    [Parameter(ParameterSetName="ComposeForDebug")]
     [parameter(ParameterSetName="Build")]
     [parameter(ParameterSetName="Clean")]
     [ValidateNotNullOrEmpty()]
@@ -38,88 +31,64 @@ Param(
 # Kills all running containers of an image and then removes them.
 function CleanAll () {
     $composeFileName = "docker-compose.yml"
-    if ($Environment -ne "Release") {
-        $composeFileName = "docker-compose.$Environment.yml"
-    }
+    $overrideFileName = "docker-compose.$Environment.yml"
 
     if (Test-Path $composeFileName) {
-        docker-compose -f "$composeFileName" down --rmi all
-
-        $danglingImages = $(docker images -q --filter 'dangling=true')
-        if (-not [String]::IsNullOrWhiteSpace($danglingImages)) {
-            docker rmi -f $danglingImages
+        if (Test-Path $overrideFileName) {
+            docker-compose -f "$composeFileName" -f "$overrideFileName" down --rmi all
+            docker rmi $(docker images --filter "dangling=true" -q)
+        }
+        else {
+            Write-Error -Message "$Environment is not a valid parameter. File '$overrideFileName' does not exist." -Category InvalidArgument                
         }
     }
     else {
-        Write-Error -Message "$Environment is not a valid parameter. File '$composeFileName' does not exist." -Category InvalidArgument
+        Write-Error -Message "File '$composeFileName' does not exist." -Category InvalidArgument
     }
 }
 
 # Builds the Docker image.
 function BuildImage () {
     $composeFileName = "docker-compose.yml"
-    if ($Environment -ne "Release") {
-        $composeFileName = "docker-compose.$Environment.yml"
-    }
+    $overrideFileName = "docker-compose.$Environment.yml"
 
     if (Test-Path $composeFileName) {
-        Write-Host "Building the project ($ENVIRONMENT)."
-
-        docker-compose -f "$composeFileName" build
+        if (Test-Path $overrideFileName) {
+            docker-compose -f "$composeFileName" -f "$overrideFileName" build
+            docker rmi $(docker images --filter "dangling=true" -q)
+        }
+        else {
+            Write-Error -Message "$Environment is not a valid parameter. File '$overrideFileName' does not exist." -Category InvalidArgument            
+        }
     }
     else {
-        Write-Error -Message "$Environment is not a valid parameter. File '$composeFileName' does not exist." -Category InvalidArgument
+        Write-Error -Message "File '$composeFileName' does not exist." -Category InvalidArgument
     }
 }
 
 # Runs docker-compose.
 function Compose () {
     $composeFileName = "docker-compose.yml"
-    if ($Environment -ne "Release") {
-        $composeFileName = "docker-compose.$Environment.yml"
-    }
+    $overrideFileName = "docker-compose.$Environment.yml"
 
     if (Test-Path $composeFileName) {
-        Write-Host "Running compose file $composeFileName"
-        docker-compose -f $composeFileName kill
-        docker-compose -f $composeFileName up -d
+        if (Test-Path $overrideFileName) {
+            docker-compose -f $composeFileName -f $overrideFileName kill
+            docker-compose -f $composeFileName -f $overrideFileName up -d --remove-orphans
+        }
+        else {
+            Write-Error -Message "$Environment is not a valid parameter. File '$overrideFileName' does not exist." -Category InvalidArgument
+        }
     }
     else {
-        Write-Error -Message "$Environment is not a valid parameter. File '$composeFileName' does not exist." -Category InvalidArgument
+        Write-Error -Message "File '$composeFileName' does not exist." -Category InvalidArgument
     }
-}
-
-# Opens the remote site
-function OpenSite () {
-    Write-Host "Opening site" -NoNewline
-    $status = 0
-
-    #Check if the site is available
-    while($status -ne 200) {
-        try {
-            $response = Invoke-WebRequest -Uri $url -Headers @{"Cache-Control"="no-cache";"Pragma"="no-cache"} -UseBasicParsing
-            $status = [int]$response.StatusCode
-        }
-        catch [System.Net.WebException] { }
-        if($status -ne 200) {
-            Write-Host "." -NoNewline
-            Start-Sleep 1
-        }
-    }
-
-    Write-Host
-    # Open the site.
-    Start-Process $url
 }
 
 $Environment = $Environment.ToLowerInvariant()
 
 # Call the correct function for the parameter that was used
 if($Compose) {
-    Compose
-    OpenSite
-}
-elseif($ComposeForDebug) {
     BuildImage
     Compose
 }

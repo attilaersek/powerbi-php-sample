@@ -1,0 +1,7 @@
+version: '2'
+
+services:
+  powerbi-php-sample:
+    image: powerbi-php-sample:latest
+    ports:
+      - "80:80"

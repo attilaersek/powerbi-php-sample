@@ -23,14 +23,6 @@
                 "isBuildCommand": false,
                 "showOutput": "always",
                 "echoCommand": true
-            },
-            {
-                "taskName": "composeForDebug",
-                "suppressTaskName": true,
-                "args": ["-ExecutionPolicy", "RemoteSigned", ".\\dockerTask.ps1", "-ComposeForDebug", "-Environment", "debug" ],
-                "isBuildCommand": false,
-                "showOutput": "always",
-                "echoCommand": true
             }
         ]
     },
@@ -51,13 +43,6 @@
                 "taskName": "compose",
                 "suppressTaskName": true,
                 "args": [ "-c", "./dockerTask.sh compose debug" ],
-                "isBuildCommand": false,
-                "showOutput": "always"
-            },
-            {
-                "taskName": "composeForDebug",
-                "suppressTaskName": true,
-                "args": [ "-c", "./dockerTask.sh composeForDebug debug" ],
                 "isBuildCommand": false,
                 "showOutput": "always"
             }
