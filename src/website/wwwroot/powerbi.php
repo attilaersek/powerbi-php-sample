@@ -1,4 +1,14 @@
 <?
+    class ReportUser {
+        public $userName;
+        public $role;
+
+        function __construct($userName, $role) {
+            $this->userName = $userName;
+            $this->role = $role;
+        }
+    }
+
     class Report {
         private $powerBi;
         public $id;
@@ -14,8 +24,8 @@
             $this->embedUrl = $data['embedUrl'];            
         }
 
-        function getEmbedToken() {
-            return $this->powerBi->getEmbedToken($this->id);
+        function getEmbedToken(ReportUser $reportUser = NULL) {
+            return $this->powerBi->getEmbedToken($this->id, $reportUser);
         }
     }
 
@@ -71,7 +81,7 @@
             return $result;
         }
 
-        function getEmbedToken($reportId) {
+        function getEmbedToken($reportId, ReportUser $reportUser = NULL) {
             $token1 = "{" . "\"typ\":\"JWT\"," . "\"alg\":\"HS256\"" . "}";
             $token2 = "{" .
                 "\"wid\":\"" . $this->workspaceId . "\"," . // workspace id
